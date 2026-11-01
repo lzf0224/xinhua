@@ -142,6 +142,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
 .energy-rate{font-size:6.5px;color:var(--muted-2);font-family:var(--mono);letter-spacing:.04em;white-space:nowrap}
 .wave-card{display:flex;flex-direction:column;justify-content:center}
 .wave-value{font-family:var(--mono);font-size:13px;font-weight:800;line-height:1.2;color:#e6fff6;margin-top:1px}
+.wave-next{display:block;font-size:9.5px;font-weight:600;color:rgba(214,255,224,.55);letter-spacing:.08em;min-height:11px;margin-top:1px}
 .wave-bar{height:3px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:5px}
 .wave-bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--mint-2),var(--sun));transition:width .25s}
 .hearts-card{display:flex;flex-direction:column;justify-content:center}
@@ -297,6 +298,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
 @keyframes btnShine{0%,62%{left:-40%}82%,100%{left:125%}}
 .micro{margin:8px 0 0;font-size:8.5px;line-height:1.6;color:var(--muted-2);letter-spacing:.01em}
 .micro b{color:#a8c9bb;font-weight:600}
+.author{margin:9px 0 2px;font-size:11px;line-height:1.4;color:rgba(255,255,255,.62);letter-spacing:.14em;text-shadow:0 1px 2px rgba(0,0,0,.55);font-family:var(--mono);font-weight:700}
 
 /* result / pause / share */
 .result-card{width:100%;max-width:328px;margin:auto;padding:18px 17px 16px;text-align:center;border-radius:23px;border:1px solid var(--line-strong);background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(73,239,167,.09),transparent 60%),linear-gradient(170deg,rgba(10,31,22,.98),rgba(5,17,12,.99));box-shadow:0 24px 70px rgba(0,0,0,.44),inset 0 1px rgba(255,255,255,.05)}
@@ -397,7 +399,6 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
   .energy-value{font-size:20px}
   .hearts{gap:2px}
   .heart-svg{width:18px;height:18px}
-  .heart::before,.heart::after{width:11px;height:16px}
   .seedbar{height:100px;gap:3px}
   .shovel{flex-basis:31px;width:31px;height:70px}
   .cards{gap:3px}
@@ -444,6 +445,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
   .logo{font-size:27px}
   .tagline{font-size:9px;line-height:1.5;max-width:250px}
   .micro{font-size:8px;margin-top:5px}
+  .author{font-size:10px;margin-top:7px}
   .primary-btn{height:42px;font-size:15px}
   .result-card{padding:13px 14px}
   .result-card h2{font-size:21px}
@@ -513,6 +515,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
       <div class="hud-card wave-card">
         <span class="kicker">WAVE / 夜行</span>
         <b id="waveValue" class="wave-value">第 1 / 4 波</b>
+        <span id="waveNext" class="wave-next"></span>
         <div class="wave-bar" aria-hidden="true"><i id="waveBar"></i></div>
       </div>
       <div class="hud-card hearts-card">
@@ -554,6 +557,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
             <span>开始守夜</span>
             <small>START</small>
           </button>
+          <p class="author" id="author">原作者：咸蛋黄</p>
           <p class="micro">点种子卡 → 点草坪种植 · <b>月光会自动恢复</b></p>
           <p class="micro">守住 3 颗花园之心，撑过 10 波夜行军团</p>
         </div>
@@ -829,6 +833,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
   const energyRateEl = $('#energyRate');
   const waveEl = $('#waveValue');
   const waveBar = $('#waveBar');
+  const waveNextEl = $('#waveNext');
   const heartsEl = $('#hearts');
   const waveBanner = $('#waveBanner');
   const waveBannerText = $('#waveBannerText');
@@ -841,6 +846,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
   const pauseOverlay = $('#pauseOverlay');
   const shareOverlay = $('#shareOverlay');
   const startBtn = $('#startBtn');
+  const authorEl = $('#author');
   const soundBtn = $('#soundBtn');
   const pauseBtn = $('#pauseBtn');
   const shareBtn = $('#shareBtn');
@@ -1294,6 +1300,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
     hideOverlay(shareOverlay, false);
     state = 'playing';
     pauseBtn.disabled = false;
+    authorEl.style.display = 'none';
     selectedCard = null;
     shovelMode = false;
     updateUI();
@@ -1313,6 +1320,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
     introOverlay.classList.remove('hidden');
     introOverlay.scrollTop = 0;
     introOverlay.classList.remove('closing');
+    authorEl.style.display = '';
     pauseBtn.disabled = true;
     Music.stop();
     updateUI();
@@ -1598,7 +1606,17 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
           }
         }
       } else if (p.type === 'corn') {
-        if (p.loadTimer > 0) p.loadTimer = Math.max(0, p.loadTimer - dt);
+        if (p.loadTimer > 0) {
+          p.loadTimer = Math.max(0, p.loadTimer - dt);
+          if (p.loadTimer === 0 && !p.cornWarned) {
+            p.cornWarned = true;
+            const cxp = view.gridX + (p.col + 0.7) * view.tileW;
+            const cyp = view.gridY + (p.row + 0.4) * view.tileH;
+            popup(cxp, cyp - 12, '装填完毕！点格子发射', '#ffd76a');
+          }
+        } else {
+          p.cornWarned = false;
+        }
       } else if (p.type === 'spike') {
         for (const z of zombies) {
           if (z.dead || z.row !== p.row) continue;
@@ -1826,6 +1844,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
     state = 'lost';
     selectedCard = null;
     shovelMode = false;
+    updateUI();
     const score = Math.max(0, waveIndex * 500 + plantedCount * 25 + killedCount * 15);
     bestScore = Math.max(bestScore, score);
     bestWave = Math.max(bestWave, waveIndex);
@@ -1879,6 +1898,23 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
     }
     const progress = state === 'won' ? 1 : waveIndex / WAVES.length;
     waveBar.style.width = `${clamp(progress, 0, 1) * 100}%`;
+    if (waveNextEl) {
+      if (state === 'playing' && waveCursor < WAVES.length) {
+        const nt = WAVES[waveCursor].at - gameTime;
+        if (nt > 0) {
+          const w = WAVES[waveCursor];
+          waveNextEl.textContent = w.groups.some((g) => g[0] === 'boss') ? 'BOSS 即将来袭' : '下一波 ' + Math.ceil(nt) + 's';
+        } else {
+          waveNextEl.textContent = '僵尸来袭！';
+        }
+      } else if (state === 'won') {
+        waveNextEl.textContent = '守夜完成';
+      } else if (state === 'lost') {
+        waveNextEl.textContent = '花园失守';
+      } else {
+        waveNextEl.textContent = '';
+      }
+    }
     cards.forEach((card) => {
       if (!card.el) return;
       const remain = Math.max(0, card.cdUntil - gameTime);
@@ -1891,6 +1927,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
     });
     shovelBtn.classList.toggle('selected', shovelMode);
     updateBossBar();
+    renderHearts();
   }
 
   function renderHearts() {
@@ -1933,6 +1970,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
       const gone = makeHeart(n);
       gone.setAttribute('class', 'heart-svg dying');
       heartsEl.appendChild(gone);
+      setTimeout(() => { if (gone.parentNode) gone.parentNode.removeChild(gone); }, 700);
     }
   }
 
