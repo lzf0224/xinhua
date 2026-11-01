@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="format-detection" content="telephone=no,email=no,address=no">
   <meta name="theme-color" content="#06110b">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,7 +13,7 @@
   <meta property="og:title" content="辛华翠大战辛华盈">
   <meta property="og:description" content="守住花园，别让辛华盈走到门口。微信内直接玩。">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="./share-cover.jpg">
+
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='34' r='22' fill='%235ff0b4'/%3E%3Cpath d='M32 12C35 3 43 0 52 4c-2 9-9 12-20 11z' fill='%230e9d6b'/%3E%3Ccircle cx='32' cy='34' r='8' fill='%23ffe7b5'/%3E%3C/svg%3E">
   <style>
 /* 辛华翠大战辛华盈 · NIGHT GARDEN
@@ -329,9 +329,9 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
 }
 .shovel svg{width:17px;height:17px}
 .shovel.selected{background:linear-gradient(160deg,#c9ffe5,#5cebb0);color:#03251a;border-color:rgba(255,255,255,.4);box-shadow:0 0 16px rgba(104,255,198,.25)}
-.cards{flex:1 1 auto;display:flex;gap:4px;min-width:0}
+.cards{flex:1 1 auto;display:flex;gap:4px;min-width:0;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
 .seed-card{
-  position:relative;flex:1 1 0;min-width:0;height:76px;border-radius:12px;overflow:hidden;
+  position:relative;flex:1 1 0;min-width:44px;height:76px;border-radius:12px;overflow:hidden;
   border:1px solid var(--line);background:linear-gradient(165deg,rgba(20,51,38,.85),rgba(6,21,15,.86));
   display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
   padding:3px 2px 2px;transition:transform .12s,border-color .12s,box-shadow .12s;
@@ -660,6 +660,18 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
     {
       id: 'bomb', name: '爆裂', full: '爆裂樱桃', cost: 150, cd: 10,
       hp: 80, bombDelay: 0.9, bombDamage: 700, color: '#ff7d8c'
+    },
+    {
+      id: 'spike', name: '地刺', full: '月光地刺', cost: 25, cd: 3.0,
+      hp: 320, spikeDps: 42, color: '#c9b8ff'
+    },
+    {
+      id: 'tri', name: '三连', full: '三连月光炮', cost: 225, cd: 5.2,
+      hp: 150, rate: 1.6, damage: 12, color: '#ffd08a'
+    },
+    {
+      id: 'vine', name: '星月', full: '星月穿刺手', cost: 200, cd: 4.6,
+      hp: 150, rate: 2.1, damage: 30, pierce: 2, color: '#bff5ff'
     }
   ];
   const PLANT_BY_ID = Object.fromEntries(CARD_DEFS.map((c) => [c.id, c]));
@@ -668,25 +680,33 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
     walker: { name: '夜行者', hp: 135, speed: 0.26, damage: 34, scale: 1.0, accent: '#ffb3c2' },
     runner: { name: '疾行者', hp: 85, speed: 0.48, damage: 26, scale: 0.92, accent: '#bda5ff' },
     armor: { name: '铁桶夜行', hp: 360, speed: 0.20, damage: 42, scale: 1.05, accent: '#ffd08a' },
-    boss: { name: '夜行主 · 辛华盈', hp: 1700, speed: 0.13, damage: 62, scale: 1.34, accent: '#ff607f' }
+    boss: { name: '夜行主 · 辛华盈', hp: 1700, speed: 0.13, damage: 62, scale: 1.34, accent: '#ff607f' },
+    cave: { name: '披风夜行', hp: 280, speed: 0.22, damage: 38, scale: 1.0, accent: '#c9a2ff' },
+    fast: { name: '冲刺者', hp: 60, speed: 0.78, damage: 20, scale: 0.85, accent: '#9be8ff' },
+    giant: { name: '巨夜行', hp: 950, speed: 0.12, damage: 58, scale: 1.28, accent: '#ff9a76' },
+    ghost: { name: '幻影夜行', hp: 150, speed: 0.34, damage: 30, scale: 0.95, accent: '#bff5ff' }
   };
 
   const WAVES = [
     {
       at: 6, name: '第一夜 · 试探',
-      groups: [['walker', 3, 1.5], ['runner', 1, 2.3]]
+      groups: [['walker', 3, 1.5], ['runner', 1, 2.3], ['cave', 1, 2.6]]
     },
     {
       at: 32, name: '第二夜 · 加速',
-      groups: [['walker', 4, 1.35], ['runner', 2, 1.6], ['armor', 1, 2.4]]
+      groups: [['walker', 4, 1.35], ['runner', 2, 1.6], ['armor', 1, 2.4], ['fast', 1, 1.8], ['cave', 1, 2.5]]
     },
     {
       at: 62, name: '第三夜 · 铁桶',
-      groups: [['walker', 5, 1.15], ['armor', 3, 1.9], ['runner', 2, 1.5]]
+      groups: [['walker', 5, 1.15], ['armor', 3, 1.9], ['runner', 2, 1.5], ['fast', 2, 1.4], ['giant', 1, 2.2]]
     },
     {
       at: 94, name: '第四夜 · 辛华盈亲自来了',
-      groups: [['boss', 1, 0], ['walker', 4, 1.5], ['runner', 2, 1.5], ['armor', 2, 2.1]]
+      groups: [['boss', 1, 0], ['walker', 4, 1.5], ['runner', 2, 1.5], ['armor', 2, 2.1], ['ghost', 2, 1.6], ['fast', 2, 1.4]]
+    },
+    {
+      at: 128, name: '第五夜 · 大军压境',
+      groups: [['giant', 2, 2.4], ['cave', 3, 1.8], ['fast', 3, 1.3], ['ghost', 2, 1.7], ['armor', 2, 2.0]]
     }
   ];
 
@@ -1363,7 +1383,16 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
         if (p.bombTimer <= 0) {
           explodeBomb(p);
         }
-      } else if (p.type === 'pea' || p.type === 'ice') {
+      } else if (p.type === 'spike') {
+        for (const z of zombies) {
+          if (z.dead || z.row !== p.row) continue;
+          if (z.x >= p.col - 0.12 && z.x <= p.col + 0.98) {
+            z.hp -= PLANT_BY_ID.spike.spikeDps * dt;
+            z.hitFlash = 0.06;
+            if (z.hp <= 0) killZombie(z);
+          }
+        }
+      } else if (p.type === 'pea' || p.type === 'ice' || p.type === 'tri' || p.type === 'vine') {
         p.fireTimer -= dt;
         if (p.fireTimer <= 0 && rowHasTarget(p.row, p.col)) {
           shoot(p);
@@ -1372,6 +1401,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
         }
       }
     }
+    plants = plants.filter((x) => !x.dead);
   }
 
   function rowHasTarget(row, col) {
@@ -1380,17 +1410,21 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
 
   function shoot(p) {
     const def = PLANT_BY_ID[p.type];
-    const x = p.col + 0.76;
-    projectiles.push({
-      type: p.type,
-      row: p.row,
-      x,
-      speed: p.type === 'ice' ? 8.5 : 9.5,
-      damage: def.damage,
-      slow: def.slow || 0,
-      life: 3,
-      phase: Math.random() * 6.28
-    });
+    const x0 = p.col + 0.76;
+    const n = p.type === 'tri' ? 3 : 1;
+    for (let i = 0; i < n; i++) {
+      projectiles.push({
+        type: p.type,
+        row: p.row,
+        x: x0 + (i - 1) * 0.09,
+        speed: p.type === 'ice' ? 8.5 : (p.type === 'tri' ? 9.2 : (p.type === 'vine' ? 10.5 : 9.5)),
+        damage: def.damage,
+        slow: def.slow || 0,
+        pierce: def.pierce || 0,
+        life: 3,
+        phase: Math.random() * 6.28
+      });
+    }
     if (p.type === 'ice') SFX.ice(); else SFX.shoot();
   }
 
@@ -1415,10 +1449,15 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
         if (pr.slow) hit.slowUntil = gameTime + pr.slow;
         const px = view.gridX + pr.x * view.tileW;
         const py = view.gridY + (pr.row + 0.45) * view.tileH;
-        spawnBurst(px, py, pr.type === 'ice' ? ['#bff7ff', '#8ceaff', '#ffffff'] : ['#c6ffd9', '#5ce9a7', '#ffe7b5'], 5, 1);
-        pr.dead = true;
+        spawnBurst(px, py, pr.type === 'ice' ? ['#bff7ff', '#8ceaff', '#ffffff'] : (pr.type === 'vine' ? ['#eafdff', '#9be8ff', '#ffffff'] : ['#c6ffd9', '#5ce9a7', '#ffe7b5']), 5, 1);
         SFX.hit();
         if (hit.hp <= 0) killZombie(hit);
+        if (pr.pierce > 0) {
+          pr.pierce--;
+          pr.x += 0.28;
+          continue;
+        }
+        pr.dead = true;
       }
     }
     projectiles = projectiles.filter((p) => !p.dead);
@@ -1434,7 +1473,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
         if (z.hp <= 0) killZombie(z);
       }
     }
-    removePlant(p, false);
+    p.dead = true;
     spawnBurst(cx, cy, ['#ffb0b8', '#ff607f', '#ffe7b5', '#ffffff'], 30, 2.6);
     popup(cx, cy - 14, 'BOOM', '#ffd2da');
     flash = 0.3;
@@ -1913,6 +1952,108 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
       c.beginPath();
       c.arc(-s * 0.21, -s * 0.05, s * 0.025, 0, Math.PI * 2);
       c.fill();
+    } else if (type === 'spike') {
+      const pulse = 1 + Math.sin(now * 0.011) * 0.05;
+      c.save();
+      c.shadowColor = 'rgba(201,184,255,.5)';
+      c.shadowBlur = s * 0.4;
+      c.fillStyle = '#8f7bff';
+      for (let i = -1; i <= 1; i++) {
+        c.beginPath();
+        c.moveTo(i * s * 0.2 - s * 0.09, s * 0.05);
+        c.lineTo(i * s * 0.2, -s * 0.3 * pulse);
+        c.lineTo(i * s * 0.2 + s * 0.09, s * 0.05);
+        c.closePath();
+        c.fill();
+      }
+      c.restore();
+      c.fillStyle = '#b7a7ff';
+      c.beginPath();
+      c.ellipse(0, s * 0.02, s * 0.32, s * 0.09, 0, 0, Math.PI * 2);
+      c.fill();
+      c.strokeStyle = '#5c4bd6';
+      c.lineWidth = Math.max(0.8, s * 0.025);
+      c.beginPath();
+      c.moveTo(-s * 0.34, s * 0.1);
+      c.quadraticCurveTo(0, -s * 0.16, s * 0.34, s * 0.1);
+      c.stroke();
+    } else if (type === 'tri') {
+      const bodyA = '#ffedb0';
+      const bodyB = '#e2a83f';
+      const grad = c.createRadialGradient(-s * 0.09, -s * 0.24, s * 0.03, 0, -s * 0.14, s * 0.46);
+      grad.addColorStop(0, bodyA);
+      grad.addColorStop(0.6, '#ffd67a');
+      grad.addColorStop(1, bodyB);
+      c.save();
+      c.shadowColor = 'rgba(255,208,138,.65)';
+      c.shadowBlur = s * 0.5;
+      c.fillStyle = grad;
+      c.beginPath();
+      c.arc(0, -s * 0.16, s * 0.33, 0, Math.PI * 2);
+      c.fill();
+      c.restore();
+      for (let i = -1; i <= 1; i++) {
+        c.fillStyle = '#f4b64d';
+        rr(c, s * 0.16 + i * s * 0.17, -s * 0.27 - Math.abs(i) * s * 0.07, s * 0.2, s * 0.14, s * 0.05);
+        c.fill();
+      }
+      c.fillStyle = '#fff3d0';
+      c.beginPath();
+      c.arc(s * 0.47, -s * 0.22, s * 0.05, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = '#6b3d0e';
+      c.beginPath();
+      c.ellipse(-s * 0.05, -s * 0.18, s * 0.06, s * 0.08, 0.1, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = '#fff';
+      c.beginPath();
+      c.arc(-s * 0.07, -s * 0.21, s * 0.02, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = '#a9ffcd';
+      c.beginPath();
+      c.ellipse(-s * 0.12, -s * 0.46, s * 0.15, s * 0.06, -0.6, 0, Math.PI * 2);
+      c.fill();
+    } else if (type === 'vine') {
+      const bodyA = '#eafdff';
+      const bodyB = '#5fb8d6';
+      const grad = c.createRadialGradient(-s * 0.09, -s * 0.24, s * 0.03, 0, -s * 0.14, s * 0.46);
+      grad.addColorStop(0, bodyA);
+      grad.addColorStop(0.6, '#bdeef7');
+      grad.addColorStop(1, bodyB);
+      c.save();
+      c.shadowColor = 'rgba(120,220,255,.65)';
+      c.shadowBlur = s * 0.55;
+      c.fillStyle = grad;
+      c.beginPath();
+      c.arc(0, -s * 0.16, s * 0.33, 0, Math.PI * 2);
+      c.fill();
+      c.restore();
+      c.strokeStyle = '#9fdce8';
+      c.lineWidth = Math.max(1, s * 0.05);
+      c.beginPath();
+      c.moveTo(-s * 0.12, -s * 0.28);
+      c.lineTo(s * 0.32, -s * 0.06);
+      c.stroke();
+      c.fillStyle = '#dffcff';
+      c.beginPath();
+      c.arc(s * 0.36, -s * 0.04, s * 0.07, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = '#9be8ff';
+      c.beginPath();
+      c.arc(s * 0.36, -s * 0.04, s * 0.035, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = '#dffcff';
+      c.beginPath();
+      c.ellipse(-s * 0.02, -s * 0.22, s * 0.05, s * 0.07, 0.1, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = '#fff';
+      c.beginPath();
+      c.arc(-s * 0.04, -s * 0.25, s * 0.017, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = '#8fe0c0';
+      c.beginPath();
+      c.ellipse(-s * 0.1, -s * 0.46, s * 0.14, s * 0.055, -0.6, 0, Math.PI * 2);
+      c.fill();
     }
     c.restore();
   }
@@ -1986,6 +2127,8 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
     ctx.arc(-s * 0.42, armY + s * 0.05, s * 0.06, 0, Math.PI * 2);
     ctx.fill();
 
+    if (z.type === 'ghost') ctx.globalAlpha = 0.72;
+
     // head photo
     const headY = -s * 0.88 + bob;
     const pr = s * 0.28;
@@ -2024,6 +2167,75 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
       ctx.fillRect(-pr * 0.7, headY - pr * 0.5, pr * 0.5, 1.5);
     }
 
+    // giant horns + bulk
+    if (z.type === 'giant') {
+      ctx.fillStyle = '#7a4a3a';
+      ctx.beginPath();
+      ctx.moveTo(-pr * 0.75, headY - pr * 0.3);
+      ctx.lineTo(-pr * 1.05, headY - pr * 0.95);
+      ctx.lineTo(-pr * 0.35, headY - pr * 0.55);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(pr * 0.75, headY - pr * 0.3);
+      ctx.lineTo(pr * 1.05, headY - pr * 0.95);
+      ctx.lineTo(pr * 0.35, headY - pr * 0.55);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,154,118,.5)';
+      ctx.lineWidth = Math.max(1.2, s * 0.045);
+      ctx.beginPath();
+      ctx.arc(0, headY, pr, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (z.type === 'cave') {
+      ctx.fillStyle = 'rgba(24,22,44,.9)';
+      ctx.beginPath();
+      ctx.moveTo(-pr * 1.15, headY - pr * 0.5);
+      ctx.quadraticCurveTo(-pr * 0.9, headY - pr * 1.45, pr * 0.3, headY - pr * 1.3);
+      ctx.quadraticCurveTo(pr * 1.1, headY - pr * 1.15, pr * 1.2, headY - pr * 0.45);
+      ctx.quadraticCurveTo(0, headY - pr * 1.5, -pr * 1.15, headY - pr * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(201,162,255,.6)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(201,162,255,.55)';
+      ctx.beginPath();
+      ctx.arc(-pr * 0.5, headY - pr * 0.2, pr * 0.12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(pr * 0.5, headY - pr * 0.2, pr * 0.12, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (z.type === 'fast') {
+      ctx.fillStyle = '#2e5f74';
+      ctx.beginPath();
+      ctx.moveTo(-pr * 1.3, headY - pr * 0.2);
+      ctx.lineTo(pr * 1.1, headY - pr * 0.75);
+      ctx.lineTo(pr * 1.1, headY + pr * 0.3);
+      ctx.lineTo(-pr * 1.3, headY + pr * 0.1);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(155,232,255,.75)';
+      ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      ctx.moveTo(-pr * 1.2, headY - pr * 0.05);
+      ctx.quadraticCurveTo(0, headY - pr * 0.95, pr * 1.05, headY - pr * 0.4);
+      ctx.stroke();
+    } else if (z.type === 'ghost') {
+      ctx.fillStyle = 'rgba(191,245,255,.5)';
+      ctx.beginPath();
+      ctx.arc(0, headY + pr * 1.35, pr * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(191,245,255,.8)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 2; i++) {
+        const a = Math.sin(now * 0.004 + i * 1.8) * 0.5;
+        ctx.beginPath();
+        ctx.arc(0, headY + pr * 1.35 + a * pr * 0.2, pr * 0.3, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
     // boss crown + star
     if (z.type === 'boss') {
       ctx.fillStyle = '#ffd76a';
@@ -2049,6 +2261,8 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
       starPath(ctx, 0, headY + pr * 1.15, 5, pr * 0.13, pr * 0.05, -Math.PI / 2);
       ctx.fill();
     }
+
+    ctx.globalAlpha = 1;
 
     // hit flash
     if (z.hitFlash > 0) {
