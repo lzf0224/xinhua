@@ -298,6 +298,16 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
 @keyframes btnShine{0%,62%{left:-40%}82%,100%{left:125%}}
 .micro{margin:8px 0 0;font-size:8.5px;line-height:1.6;color:var(--muted-2);letter-spacing:.01em}
 .micro b{color:#a8c9bb;font-weight:600}
+.patch-note{margin:2px auto 11px;max-width:300px;padding:8px 12px 9px;border:1px solid rgba(162,255,211,.22);border-radius:12px;background:linear-gradient(180deg,rgba(12,34,24,.82),rgba(8,24,17,.94));box-shadow:0 4px 16px rgba(0,0,0,.25);text-align:left}
+.patch-head{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;font-weight:800;letter-spacing:.16em;color:var(--mint)}
+.patch-head::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px rgba(113,255,185,.9)}
+.patch-head small{margin-left:auto;font-size:7.5px;color:var(--muted);letter-spacing:.1em}
+.patch-list{margin:6px 0 0;padding:0;list-style:none;display:grid;gap:3px}
+.patch-list li{position:relative;padding-left:11px;font-size:8.5px;line-height:1.55;color:#cfe7dc}
+.patch-list li::before{content:"";position:absolute;left:1px;top:5px;width:4px;height:4px;border-radius:50%;background:var(--rose);box-shadow:0 0 5px rgba(255,141,164,.8)}
+.patch-list li.patch-sub{position:relative;padding-left:0;margin-top:3px;font-family:var(--mono);font-size:9px;font-weight:800;letter-spacing:.14em;color:var(--mint)}
+.patch-list li.patch-sub::before{display:none}
+.patch-list li.patch-sub::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:1px;background:linear-gradient(90deg,rgba(162,255,211,.55),transparent)}
 .author{margin:9px 0 2px;font-size:11px;line-height:1.4;color:rgba(255,255,255,.62);letter-spacing:.14em;text-shadow:0 1px 2px rgba(0,0,0,.55);font-family:var(--mono);font-weight:700}
 
 /* result / pause / share */
@@ -444,6 +454,9 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
   .cast figcaption{font-size:8.5px;margin-top:4px}
   .logo{font-size:27px}
   .tagline{font-size:9px;line-height:1.5;max-width:250px}
+  .patch-note{margin:1px auto 8px;padding:6px 10px 7px}
+  .patch-list{gap:2px}
+  .patch-list li{font-size:8px;line-height:1.5}
   .micro{font-size:8px;margin-top:5px}
   .author{font-size:10px;margin-top:7px}
   .primary-btn{height:42px;font-size:15px}
@@ -552,6 +565,23 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
             </figure>
           </div>
 
+          <div class="patch-note" role="note">
+            <div class="patch-head">更新公告<small>V2.0</small></div>
+            <ul class="patch-list">
+              <li>花园扩大至 10 × 6 格</li>
+              <li>夜行军团增至 15 波</li>
+              <li>夜行主 · 辛华盈压轴登场</li>
+              <li class="patch-sub">新增 7 种植物</li>
+              <li>月影机枪 · 双管连射</li>
+              <li>磁月花 · 击退僵尸</li>
+              <li>月影冰墙 · 减速高墙</li>
+              <li>月光南瓜 · 定时爆炸</li>
+              <li>月光鼓舞 · 加速友军</li>
+              <li>星光射手 · 全图打击</li>
+              <li>暮光花 · 高产月光</li>
+            </ul>
+          </div>
+
           <button id="startBtn" class="primary-btn" type="button">
             <span class="btn-seed" aria-hidden="true"></span>
             <span>开始守夜</span>
@@ -559,7 +589,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
           </button>
           <p class="author" id="author">原作者：咸蛋黄</p>
           <p class="micro">点种子卡 → 点草坪种植 · <b>月光会自动恢复</b></p>
-          <p class="micro">守住 3 颗花园之心，撑过 10 波夜行军团</p>
+          <p class="micro">守住 3 颗花园之心，撑过 15 波夜行军团</p>
         </div>
       </section>
 
@@ -659,8 +689,8 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const pad = (n, l = 2) => String(n).padStart(l, '0');
 
-  const COLS = 8;
-  const ROWS = 5;
+  const COLS = 10;
+  const ROWS = 6;
   const CARD_DEFS = [
     {
       id: 'pea', name: '豌豆', full: '豌豆射手', cost: 100, cd: 2.6,
@@ -709,6 +739,34 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
     {
       id: 'corn', name: '加农', full: '玉米加农炮', cost: 450, cd: 14,
       hp: 220, cornLoad: 6, cornDamage: 220, cornRange: 1, color: '#ffd76a'
+    },
+    {
+      id: 'gatling', name: '机枪', full: '月影机枪', cost: 275, cd: 4.0,
+      hp: 150, rate: 0.55, damage: 8, color: '#b6ffd0'
+    },
+    {
+      id: 'magnet', name: '磁月', full: '磁月花', cost: 125, cd: 3.5,
+      hp: 160, repelRange: 1.3, repelPower: 0.4, color: '#bda5ff'
+    },
+    {
+      id: 'icewall', name: '冰墙', full: '月影冰墙', cost: 100, cd: 4.0,
+      hp: 1500, touchSlow: 1.5, color: '#bdf7ff'
+    },
+    {
+      id: 'pumpkin', name: '南瓜', full: '月光南瓜', cost: 320, cd: 8,
+      hp: 420, bombEvery: 7, bombDamage: 190, color: '#ffb066'
+    },
+    {
+      id: 'boost', name: '鼓舞', full: '月光鼓舞', cost: 200, cd: 5.0,
+      hp: 140, boostRange: 1.5, boostRate: 0.45, color: '#ffd08a'
+    },
+    {
+      id: 'star', name: '星光', full: '星光射手', cost: 260, cd: 4.5,
+      hp: 150, rate: 2.2, damage: 70, color: '#ffe7b5'
+    },
+    {
+      id: 'bloom', name: '暮光', full: '暮光花', cost: 400, cd: 7.0,
+      hp: 150, sunEvery: 5.0, sunValue: 60, color: '#d9b8ff'
     }
   ];
   const PLANT_BY_ID = Object.fromEntries(CARD_DEFS.map((c) => [c.id, c]));
@@ -765,8 +823,28 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
       groups: [['armor', 5, 1.9], ['fast', 4, 1.2], ['split', 4, 1.5], ['ghost', 3, 1.6], ['healer', 1, 2.0], ['giant', 2, 2.1]]
     },
     {
-      at: 314, name: '第十夜 · 辛华盈降临',
-      groups: [['boss', 1, 0], ['brute', 2, 2.3], ['giant', 2, 2.1], ['healer', 2, 1.9], ['fast', 4, 1.2], ['split', 3, 1.5]]
+      at: 314, name: '第十夜 · 夜潮汹涌',
+      groups: [['armor', 4, 2.0], ['fast', 4, 1.2], ['split', 4, 1.5], ['brute', 2, 2.3], ['cave', 3, 1.7]]
+    },
+    {
+      at: 354, name: '第十一夜 · 幻影低语',
+      groups: [['ghost', 5, 1.55], ['split', 4, 1.5], ['fast', 4, 1.15], ['cave', 3, 1.7], ['healer', 2, 1.9]]
+    },
+    {
+      at: 394, name: '第十二夜 · 巨影压境',
+      groups: [['giant', 3, 2.0], ['brute', 3, 2.2], ['armor', 4, 1.8], ['healer', 3, 1.8], ['ghost', 2, 1.6]]
+    },
+    {
+      at: 434, name: '第十三夜 · 破门冲锋',
+      groups: [['brute', 3, 2.1], ['fast', 5, 1.1], ['split', 5, 1.4], ['armor', 4, 1.8], ['cave', 4, 1.6]]
+    },
+    {
+      at: 474, name: '第十四夜 · 黎明前最黑',
+      groups: [['cave', 5, 1.5], ['ghost', 5, 1.45], ['split', 5, 1.35], ['giant', 2, 2.0], ['healer', 2, 1.8], ['fast', 5, 1.0]]
+    },
+    {
+      at: 514, name: '第十五夜 · 辛华盈降临',
+      groups: [['boss', 1, 0], ['brute', 2, 2.2], ['giant', 2, 2.0], ['healer', 3, 1.8], ['fast', 5, 1.05], ['split', 4, 1.4]]
     }
   ];
 
@@ -1397,6 +1475,9 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
       bombTimer: def.bombDelay || 0,
       pepperTimer: def.pepperDelay || 0,
       loadTimer: def.cornLoad || 0,
+      repelTimer: 0.5,
+      touchTimer: 0.35,
+      pumpkinTimer: def.bombEvery || 0,
       flash: 0,
       hitFlash: 0,
       bornAt: gameTime
@@ -1574,7 +1655,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
     for (const p of plants) {
       p.flash = Math.max(0, p.flash - dt);
       p.hitFlash = Math.max(0, p.hitFlash - dt);
-      if (p.type === 'sun' || p.type === 'twin') {
+      if (p.type === 'sun' || p.type === 'twin' || p.type === 'bloom') {
         p.sunTimer -= dt;
         if (p.sunTimer <= 0) {
           p.sunTimer = PLANT_BY_ID[p.type].sunEvery || 7;
@@ -1626,7 +1707,63 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
             if (z.hp <= 0) killZombie(z);
           }
         }
-      } else if (p.type === 'pea' || p.type === 'ice' || p.type === 'tri' || p.type === 'vine') {
+      } else if (p.type === 'magnet') {
+        p.repelTimer -= dt;
+        if (p.repelTimer <= 0) {
+          p.repelTimer = 0.5;
+          const def = PLANT_BY_ID.magnet;
+          for (const z of zombies) {
+            if (z.dead) continue;
+            if (Math.abs(z.row - p.row) <= 1 && z.x >= p.col - 0.15 && z.x <= p.col + def.repelRange) {
+              z.x = Math.max(Math.max(p.col - 0.35, 0.12), z.x - def.repelPower);
+              z.hitFlash = Math.max(z.hitFlash, 0.06);
+            }
+          }
+        }
+      } else if (p.type === 'icewall') {
+        p.touchTimer -= dt;
+        if (p.touchTimer <= 0) {
+          p.touchTimer = 0.35;
+          for (const z of zombies) {
+            if (z.dead || z.row !== p.row) continue;
+            if (z.x >= p.col - 0.1 && z.x <= p.col + 0.95) {
+              z.slowUntil = gameTime + PLANT_BY_ID.icewall.touchSlow;
+              z.hitFlash = Math.max(z.hitFlash, 0.05);
+            }
+          }
+        }
+      } else if (p.type === 'pumpkin') {
+        p.pumpkinTimer -= dt;
+        if (p.pumpkinTimer <= 0) {
+          p.pumpkinTimer = PLANT_BY_ID.pumpkin.bombEvery;
+          explodePumpkin(p);
+        }
+      } else if (p.type === 'boost') {
+        for (const q of plants) {
+          if (q === p || q.dead) continue;
+          if (Math.abs(q.row - p.row) > PLANT_BY_ID.boost.boostRange || Math.abs(q.col - p.col) > PLANT_BY_ID.boost.boostRange) continue;
+          if (q.type === 'pea' || q.type === 'ice' || q.type === 'tri' || q.type === 'vine' || q.type === 'gatling' || q.type === 'star') {
+            q.fireTimer -= PLANT_BY_ID.boost.boostRate * dt;
+          }
+        }
+      } else if (p.type === 'star') {
+        p.fireTimer -= dt;
+        if (p.fireTimer <= 0) {
+          const alive = zombies.filter((z) => !z.dead);
+          if (alive.length) {
+            const z = alive[Math.floor(Math.random() * alive.length)];
+            z.hp -= PLANT_BY_ID.star.damage;
+            z.hitFlash = 0.15;
+            const px = view.gridX + z.x * view.tileW;
+            const py = view.gridY + (z.row + 0.45) * view.tileH;
+            spawnBurst(px, py - 10, ['#ffe7b5', '#fff3c9', '#ffffff'], 10, 1.2);
+            SFX.shoot();
+            if (z.hp <= 0) killZombie(z);
+          }
+          p.fireTimer = PLANT_BY_ID[p.type].rate;
+          p.flash = 0.12;
+        }
+      } else if (p.type === 'pea' || p.type === 'ice' || p.type === 'tri' || p.type === 'vine' || p.type === 'gatling') {
         p.fireTimer -= dt;
         if (p.fireTimer <= 0 && rowHasTarget(p.row, p.col)) {
           shoot(p);
@@ -1745,6 +1882,23 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
     popup(cx, cy - 14, '灼烧', '#ffd8c2');
     flash = 0.25;
     flashColor = '255,125,82';
+    SFX.boom();
+  }
+
+  function explodePumpkin(p) {
+    const cx = view.gridX + (p.col + 0.5) * view.tileW;
+    const cy = view.gridY + (p.row + 0.5) * view.tileH;
+    for (const z of zombies) {
+      if (z.dead) continue;
+      if (Math.abs(z.row - p.row) <= 1 && Math.abs(z.x - (p.col + 0.5)) <= 1.85) {
+        z.hp -= PLANT_BY_ID.pumpkin.bombDamage;
+        z.hitFlash = 0.3;
+        if (z.hp <= 0) killZombie(z);
+      }
+    }
+    spawnBurst(cx, cy, ['#ffc78a', '#ff9a5c', '#ffe7b5', '#ffffff'], 24, 2.2);
+    popup(cx, cy - 14, '爆', '#ffd8c2');
+    shake = Math.max(shake, 0.3);
     SFX.boom();
   }
 
@@ -1883,8 +2037,11 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
   /* ------------------------------ 界面更新 ------------------------------ */
   function updateUI() {
     energyEl.textContent = String(Math.floor(energy));
-    const sunCount = plants.filter((p) => p.type === 'sun').length;
-    energyRateEl.textContent = `+${(5 + sunCount * 3.57).toFixed(1)} / 秒`;
+    const sunRate = plants.reduce((a, p) => {
+      const def = PLANT_BY_ID[p.type];
+      return a + (def && def.sunValue ? def.sunValue / def.sunEvery : 0);
+    }, 0);
+    energyRateEl.textContent = `+${(5 + sunRate).toFixed(1)} / 秒`;
     if (state === 'intro') {
       waveEl.textContent = '等待第一夜';
     } else if (state === 'won') {
@@ -2171,16 +2328,18 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
     c.fill();
     c.restore();
 
-    if (type === 'pea' || type === 'ice') {
+    if (type === 'pea' || type === 'ice' || type === 'gatling' || type === 'star') {
       const isIce = type === 'ice';
-      const bodyA = isIce ? '#bdf7ff' : '#b6ffd0';
-      const bodyB = isIce ? '#4bc8ef' : '#28c77c';
+      const isGat = type === 'gatling';
+      const isStar = type === 'star';
+      const bodyA = isIce ? '#bdf7ff' : (isStar ? '#fff3c9' : (isGat ? '#c4ffd9' : '#b6ffd0'));
+      const bodyB = isIce ? '#4bc8ef' : (isStar ? '#e3b93f' : (isGat ? '#3bd98c' : '#28c77c'));
       const grad = c.createRadialGradient(-s * 0.09, -s * 0.24, s * 0.03, 0, -s * 0.14, s * 0.46);
       grad.addColorStop(0, bodyA);
-      grad.addColorStop(0.58, isIce ? '#6fe0ff' : '#58e6a6');
+      grad.addColorStop(0.58, isIce ? '#6fe0ff' : (isStar ? '#f6d36b' : (isGat ? '#6ff0b0' : '#58e6a6')));
       grad.addColorStop(1, bodyB);
       c.save();
-      c.shadowColor = isIce ? 'rgba(112,230,255,.7)' : 'rgba(98,255,175,.65)';
+      c.shadowColor = isIce ? 'rgba(112,230,255,.7)' : (isStar ? 'rgba(255,224,122,.65)' : (isGat ? 'rgba(98,255,175,.6)' : 'rgba(98,255,175,.65)'));
       c.shadowBlur = s * 0.5;
       c.fillStyle = grad;
       c.beginPath();
@@ -2188,9 +2347,24 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
       c.fill();
       c.restore();
       // muzzle
-      c.fillStyle = isIce ? '#4fcdec' : '#35cf87';
+      c.fillStyle = isIce ? '#4fcdec' : (isStar ? '#e8c84a' : '#35cf87');
       rr(c, s * 0.18, -s * 0.27, s * 0.31, s * 0.2, s * 0.07);
       c.fill();
+      if (isGat) {
+        rr(c, s * 0.18, -s * 0.4, s * 0.31, s * 0.12, s * 0.05);
+        c.fill();
+      }
+      if (isStar) {
+        c.save();
+        c.translate(-s * 0.02, -s * 0.33);
+        c.fillStyle = '#ffe07a';
+        c.strokeStyle = '#c98f2a';
+        c.lineWidth = Math.max(0.8, s * 0.02);
+        starPath(c, 0, 0, 5, s * 0.17, s * 0.075);
+        c.fill();
+        c.stroke();
+        c.restore();
+      }
       c.fillStyle = isIce ? '#d9fbff' : '#d8ffe7';
       c.beginPath();
       c.arc(s * 0.49, -s * 0.17, s * 0.055, 0, Math.PI * 2);
@@ -2226,61 +2400,76 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
         c.arc(s * 0.52, -s * 0.17, s * 0.12, 0, Math.PI * 2);
         c.fill();
       }
-    } else if (type === 'wall') {
+    } else if (type === 'wall' || type === 'icewall' || type === 'pumpkin') {
       const grad = c.createLinearGradient(-s * 0.4, -s * 0.4, s * 0.4, s * 0.4);
-      grad.addColorStop(0, '#ffe6b0');
-      grad.addColorStop(0.5, '#e4b65e');
-      grad.addColorStop(1, '#a87230');
+      if (type === 'icewall') {
+        grad.addColorStop(0, '#dffcff');
+        grad.addColorStop(0.5, '#7fdcef');
+        grad.addColorStop(1, '#2f8fb0');
+      } else if (type === 'pumpkin') {
+        grad.addColorStop(0, '#ffd9a8');
+        grad.addColorStop(0.5, '#f7a35b');
+        grad.addColorStop(1, '#c2603a');
+      } else {
+        grad.addColorStop(0, '#ffe6b0');
+        grad.addColorStop(0.5, '#e4b65e');
+        grad.addColorStop(1, '#a87230');
+      }
       c.save();
-      c.shadowColor = 'rgba(255,210,130,.45)';
+      c.shadowColor = type === 'icewall' ? 'rgba(150,230,255,.5)' : (type === 'pumpkin' ? 'rgba(255,160,90,.5)' : 'rgba(255,210,130,.45)');
       c.shadowBlur = s * 0.4;
       c.fillStyle = grad;
       c.beginPath();
       c.ellipse(0, -s * 0.04, s * 0.4, s * 0.52, 0, 0, Math.PI * 2);
       c.fill();
       c.restore();
-      c.strokeStyle = 'rgba(255,245,215,.55)';
+      c.strokeStyle = type === 'icewall' ? 'rgba(230,254,255,.6)' : (type === 'pumpkin' ? 'rgba(255,235,205,.55)' : 'rgba(255,245,215,.55)');
       c.lineWidth = Math.max(1, s * 0.035);
       c.beginPath();
       c.ellipse(0, -s * 0.04, s * 0.4, s * 0.52, 0, 0, Math.PI * 2);
       c.stroke();
       // face
-      c.fillStyle = '#5b3a1c';
+      c.fillStyle = type === 'icewall' ? '#0c3a4d' : (type === 'pumpkin' ? '#6e2f17' : '#5b3a1c');
       c.beginPath();
       c.ellipse(-s * 0.12, -s * 0.1, s * 0.035, s * 0.055, 0, 0, Math.PI * 2);
       c.fill();
       c.beginPath();
       c.ellipse(s * 0.12, -s * 0.1, s * 0.035, s * 0.055, 0, 0, Math.PI * 2);
       c.fill();
-      c.strokeStyle = '#7b4b22';
+      c.strokeStyle = type === 'icewall' ? '#14506b' : (type === 'pumpkin' ? '#8a3a1c' : '#7b4b22');
       c.lineWidth = Math.max(0.8, s * 0.03);
       c.beginPath();
       c.arc(0, s * 0.02, s * 0.12, 0.15, Math.PI - 0.15);
       c.stroke();
       // top leaf
-      c.fillStyle = '#70e3a1';
+      c.fillStyle = type === 'icewall' ? '#c4f2ff' : '#70e3a1';
       c.beginPath();
       c.ellipse(s * 0.08, -s * 0.56, s * 0.14, s * 0.055, -0.55, 0, Math.PI * 2);
       c.fill();
-    } else if (type === 'sun') {
+      if (type === 'pumpkin') {
+        c.fillStyle = '#5f8f3f';
+        rr(c, -s * 0.05, -s * 0.68, s * 0.1, s * 0.18, s * 0.04);
+        c.fill();
+      }
+    } else if (type === 'sun' || type === 'magnet' || type === 'boost' || type === 'bloom') {
       const pulse = 1 + Math.sin(now * 0.005) * 0.04;
       c.save();
-      c.fillStyle = 'rgba(255,215,106,.16)';
-      c.shadowColor = 'rgba(255,215,106,.7)';
+      c.fillStyle = type === 'magnet' ? 'rgba(189,165,255,.18)' : (type === 'bloom' ? 'rgba(217,184,255,.2)' : (type === 'boost' ? 'rgba(255,208,138,.2)' : 'rgba(255,215,106,.16)'));
+      c.shadowColor = type === 'magnet' ? 'rgba(189,165,255,.7)' : (type === 'bloom' ? 'rgba(217,184,255,.7)' : (type === 'boost' ? 'rgba(255,208,138,.7)' : 'rgba(255,215,106,.7)'));
       c.shadowBlur = s * 0.8;
       c.beginPath();
       c.arc(0, -s * 0.14, s * 0.48 * pulse, 0, Math.PI * 2);
       c.fill();
       c.restore();
-      const petals = 10;
+      const petals = type === 'bloom' ? 14 : 10;
       for (let i = 0; i < petals; i++) {
         const a = i / petals * Math.PI * 2 + Math.sin(now * 0.001) * 0.02;
         c.save();
         c.translate(0, -s * 0.14);
         c.rotate(a);
-        c.fillStyle = i % 2 ? '#ffdf8a' : '#ffd15c';
+        c.fillStyle = type === 'magnet' ? (i % 2 ? '#cdb4ff' : '#a585ff') : (type === 'boost' ? (i % 2 ? '#ffe0a0' : '#ffcf5c') : (type === 'bloom' ? (i % 2 ? '#e3c6ff' : '#b98aff') : (i % 2 ? '#ffdf8a' : '#ffd15c')));
         c.beginPath();
-        c.ellipse(0, -s * 0.28, s * 0.1, s * 0.18, 0, 0, Math.PI * 2);
+        c.ellipse(0, -s * 0.28, s * (type === 'bloom' ? 0.11 : 0.1), s * (type === 'bloom' ? 0.2 : 0.18), 0, 0, Math.PI * 2);
         c.fill();
         c.restore();
       }
@@ -2288,13 +2477,31 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
       c.beginPath();
       c.arc(0, -s * 0.14, s * 0.23, 0, Math.PI * 2);
       c.clip();
-      drawPhoto(c, imgCui, 0, -s * 0.14, s * 0.23, '#ffe7b5', '#d6a345');
+      drawPhoto(c, imgCui, 0, -s * 0.14, s * 0.23, type === 'magnet' ? '#cbb4ff' : (type === 'boost' ? '#ffd9a0' : (type === 'bloom' ? '#e0c9ff' : '#ffe7b5')), type === 'magnet' ? '#8a6ad1' : (type === 'boost' ? '#c98f3a' : (type === 'bloom' ? '#a97fd1' : '#d6a345')));
       c.restore();
-      c.strokeStyle = '#fff3c9';
+      c.strokeStyle = type === 'magnet' ? '#e3d4ff' : (type === 'boost' ? '#fff0cd' : (type === 'bloom' ? '#efdcff' : '#fff3c9'));
       c.lineWidth = Math.max(1, s * 0.03);
       c.beginPath();
       c.arc(0, -s * 0.14, s * 0.23, 0, Math.PI * 2);
       c.stroke();
+      if (type === 'boost') {
+        c.strokeStyle = 'rgba(255,225,150,.95)';
+        c.lineWidth = Math.max(1, s * 0.045);
+        c.beginPath();
+        c.arc(0, -s * 0.14, s * 0.37, -Math.PI * 0.78, -Math.PI * 0.22);
+        c.stroke();
+      }
+      if (type === 'magnet') {
+        c.strokeStyle = '#e9ddff';
+        c.lineWidth = Math.max(1, s * 0.055);
+        c.lineCap = 'round';
+        c.beginPath();
+        c.arc(-s * 0.36, -s * 0.14, s * 0.15, Math.PI * 0.65, Math.PI * 1.55);
+        c.stroke();
+        c.beginPath();
+        c.arc(s * 0.36, -s * 0.14, s * 0.15, Math.PI * 1.45, Math.PI * 2.35);
+        c.stroke();
+      }
     } else if (type === 'bomb') {
       const pulse = 1 + Math.sin(now * 0.012) * 0.08;
       c.save();
