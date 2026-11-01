@@ -672,6 +672,18 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
     {
       id: 'vine', name: '星月', full: '星月穿刺手', cost: 200, cd: 4.6,
       hp: 150, rate: 2.1, damage: 30, pierce: 2, color: '#bff5ff'
+    },
+    {
+      id: 'pepper', name: '辣椒', full: '月光辣椒', cost: 175, cd: 9,
+      hp: 80, pepperDelay: 0.8, pepperDamage: 320, color: '#ff7d52'
+    },
+    {
+      id: 'heal', name: '庇护', full: '月光庇护', cost: 100, cd: 5.0,
+      hp: 160, healRate: 18, healRange: 1, color: '#baffd9'
+    },
+    {
+      id: 'twin', name: '双子', full: '双子月光花', cost: 150, cd: 5.0,
+      hp: 130, sunEvery: 7.0, sunValue: 50, color: '#ffd76a'
     }
   ];
   const PLANT_BY_ID = Object.fromEntries(CARD_DEFS.map((c) => [c.id, c]));
@@ -684,7 +696,10 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
     cave: { name: '披风夜行', hp: 280, speed: 0.22, damage: 38, scale: 1.0, accent: '#c9a2ff' },
     fast: { name: '冲刺者', hp: 60, speed: 0.78, damage: 20, scale: 0.85, accent: '#9be8ff' },
     giant: { name: '巨夜行', hp: 950, speed: 0.12, damage: 58, scale: 1.28, accent: '#ff9a76' },
-    ghost: { name: '幻影夜行', hp: 150, speed: 0.34, damage: 30, scale: 0.95, accent: '#bff5ff' }
+    ghost: { name: '幻影夜行', hp: 150, speed: 0.34, damage: 30, scale: 0.95, accent: '#bff5ff' },
+    split: { name: '分裂者', hp: 160, speed: 0.30, damage: 28, scale: 1.0, accent: '#ffb54f' },
+    healer: { name: '治疗者', hp: 240, speed: 0.20, damage: 22, scale: 0.98, accent: '#7dffb0' },
+    brute: { name: '破门者', hp: 520, speed: 0.16, damage: 30, scale: 1.12, accent: '#ff8a5c' }
   };
 
   const WAVES = [
@@ -706,7 +721,11 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
     },
     {
       at: 128, name: '第五夜 · 大军压境',
-      groups: [['giant', 2, 2.4], ['cave', 3, 1.8], ['fast', 3, 1.3], ['ghost', 2, 1.7], ['armor', 2, 2.0]]
+      groups: [['giant', 2, 2.4], ['cave', 3, 1.8], ['fast', 3, 1.3], ['ghost', 2, 1.7], ['armor', 2, 2.0], ['brute', 1, 2.3], ['split', 2, 1.9]]
+    },
+    {
+      at: 162, name: '第六夜 · 终局之战',
+      groups: [['brute', 2, 2.4], ['healer', 2, 2.0], ['split', 3, 1.6], ['ghost', 2, 1.7], ['fast', 3, 1.2], ['giant', 2, 2.2]]
     }
   ];
 
@@ -1213,6 +1232,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
       fireTimer: 0.45 + Math.random() * 0.25,
       sunTimer: 3.2,
       bombTimer: def.bombDelay || 0,
+      pepperTimer: def.pepperDelay || 0,
       flash: 0,
       hitFlash: 0,
       bornAt: gameTime
@@ -1288,6 +1308,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
       accent: def.accent,
       slowUntil: 0,
       hitFlash: 0,
+      healTimer: 0,
       attackPhase: Math.random() * Math.PI * 2,
       walkPhase: Math.random() * Math.PI * 2,
       dead: false,
@@ -1313,10 +1334,25 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
       z.hitFlash = Math.max(0, z.hitFlash - dt);
       z.attackPhase += dt * (z.attacking ? 9 : 4.5);
       z.walkPhase += dt * (z.attacking ? 4 : 7) * (z.slowUntil > gameTime ? 0.6 : 1);
+      if (z.type === 'healer') {
+        z.healTimer -= dt;
+        if (z.healTimer <= 0) {
+          z.healTimer = 3;
+          for (const q of zombies) {
+            if (q.dead || q === z || q.row !== z.row) continue;
+            if (Math.abs(q.x - z.x) <= 2.2 && q.hp < q.maxHp) {
+              q.hp = Math.min(q.maxHp, q.hp + 55);
+              const hx = view.gridX + q.x * view.tileW;
+              const hy = view.gridY + (q.row + 0.45) * view.tileH;
+              spawnBurst(hx, hy - 10, ['#7dffb0', '#a2ffd3'], 4, 0.8);
+            }
+          }
+        }
+      }
       const target = findPlantTarget(z);
       if (target) {
         z.attacking = true;
-        target.hp -= z.damage * dt;
+        target.hp -= (z.type === 'brute' && target.type === 'wall' ? z.damage * 3 : z.damage) * dt;
         target.hitFlash = 0.1;
         if (target.hp <= 0) {
           removePlant(target);
@@ -1367,14 +1403,14 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
     for (const p of plants) {
       p.flash = Math.max(0, p.flash - dt);
       p.hitFlash = Math.max(0, p.hitFlash - dt);
-      if (p.type === 'sun') {
+      if (p.type === 'sun' || p.type === 'twin') {
         p.sunTimer -= dt;
         if (p.sunTimer <= 0) {
-          p.sunTimer = 7;
-          energy = Math.min(999, energy + 25);
+          p.sunTimer = PLANT_BY_ID[p.type].sunEvery || 7;
+          energy = Math.min(999, energy + (PLANT_BY_ID[p.type].sunValue || 25));
           const px = view.gridX + (p.col + 0.5) * view.tileW;
           const py = view.gridY + (p.row + 0.45) * view.tileH;
-          popup(px, py - 12, '+25', '#ffe7b5');
+          popup(px, py - 12, '+' + (PLANT_BY_ID[p.type].sunValue || 25), '#ffe7b5');
           spawnBurst(px, py, ['#ffe7b5', '#ffd76a', '#a2ffd3'], 7, 0.9);
           SFX.sun();
         }
@@ -1382,6 +1418,20 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
         p.bombTimer -= dt;
         if (p.bombTimer <= 0) {
           explodeBomb(p);
+        }
+      } else if (p.type === 'pepper') {
+        p.pepperTimer -= dt;
+        if (p.pepperTimer <= 0) {
+          explodePepper(p);
+        }
+      } else if (p.type === 'heal') {
+        for (const q of plants) {
+          if (q === p || q.dead) continue;
+          const range = PLANT_BY_ID.heal.healRange || 1;
+          if (Math.abs(q.row - p.row) <= range && Math.abs(q.col - p.col) <= range && q.hp < q.maxHp) {
+            q.hp = Math.min(q.maxHp, q.hp + PLANT_BY_ID.heal.healRate * dt);
+            q.hitFlash = Math.max(q.hitFlash, 0.05);
+          }
         }
       } else if (p.type === 'spike') {
         for (const z of zombies) {
@@ -1482,12 +1532,46 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
     SFX.boom();
   }
 
+  function explodePepper(p) {
+    const cy = view.gridY + (p.row + 0.45) * view.tileH;
+    for (const z of zombies) {
+      if (z.dead || z.row !== p.row) continue;
+      if (z.x <= p.col + 2.6) {
+        z.hp -= PLANT_BY_ID.pepper.pepperDamage;
+        z.hitFlash = 0.3;
+        if (z.hp <= 0) killZombie(z);
+      }
+    }
+    p.dead = true;
+    const cx = view.gridX + (p.col + 0.5) * view.tileW;
+    spawnBurst(cx, cy, ['#ffb78a', '#ff7d52', '#ffe7b5', '#ffffff'], 26, 2.4);
+    popup(cx, cy - 14, '灼烧', '#ffd8c2');
+    flash = 0.25;
+    flashColor = '255,125,82';
+    SFX.boom();
+  }
+
   function killZombie(z) {
     if (z.dead) return;
     z.dead = true;
     if (z === boss) {
       boss = null;
       showBanner('辛华盈退回了夜色', 'boss', 2200);
+    }
+    if (z.type === 'split') {
+      const sp = ZOMBIE_DEFS.runner;
+      for (let i = 0; i < 2; i++) {
+        zombies.push({
+          type: 'runner', row: z.row, x: Math.min(COLS + 0.6, z.x + 0.35 + i * 0.3),
+          hp: sp.hp, maxHp: sp.hp, speed: sp.speed, damage: sp.damage,
+          scale: sp.scale, accent: sp.accent, slowUntil: 0, hitFlash: 0,
+          attackPhase: Math.random() * Math.PI * 2, walkPhase: Math.random() * Math.PI * 2,
+          dead: false, attacking: false, healTimer: 0
+        });
+      }
+      const sx0 = view.gridX + z.x * view.tileW;
+      const sy0 = view.gridY + (z.row + 0.48) * view.tileH;
+      spawnBurst(sx0, sy0, ['#ffb54f', '#ffe7b5', '#fff'], 14, 1.4);
     }
     const px = view.gridX + z.x * view.tileW;
     const py = view.gridY + (z.row + 0.48) * view.tileH;
@@ -2054,6 +2138,103 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
       c.beginPath();
       c.ellipse(-s * 0.1, -s * 0.46, s * 0.14, s * 0.055, -0.6, 0, Math.PI * 2);
       c.fill();
+    } else if (type === 'pepper') {
+      const pulse = 1 + Math.sin(now * 0.013) * 0.06;
+      c.save();
+      c.shadowColor = 'rgba(255,125,82,.6)';
+      c.shadowBlur = s * 0.5;
+      c.fillStyle = '#e8432e';
+      c.beginPath();
+      c.ellipse(0, -s * 0.1, s * 0.3, s * 0.2 * pulse, -0.15, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = '#c22f1d';
+      c.beginPath();
+      c.ellipse(s * 0.24, -s * 0.16, s * 0.12, s * 0.09, -0.15, 0, Math.PI * 2);
+      c.fill();
+      c.restore();
+      c.strokeStyle = '#2d8f3a';
+      c.lineWidth = Math.max(1.2, s * 0.06);
+      c.beginPath();
+      c.moveTo(0, -s * 0.28);
+      c.quadraticCurveTo(s * 0.06, -s * 0.45, s * 0.02, -s * 0.55);
+      c.stroke();
+      c.fillStyle = '#ffd76a';
+      c.beginPath();
+      c.arc(s * 0.02, -s * 0.56, s * 0.05, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = 'rgba(255,190,160,.85)';
+      c.beginPath();
+      c.arc(-s * 0.08, -s * 0.16, s * 0.06, 0, Math.PI * 2);
+      c.fill();
+    } else if (type === 'heal') {
+      const halo = 1 + Math.sin(now * 0.005) * 0.05;
+      c.save();
+      c.fillStyle = 'rgba(186,255,217,.18)';
+      c.shadowColor = 'rgba(122,255,190,.7)';
+      c.shadowBlur = s * 0.7;
+      c.beginPath();
+      c.arc(0, -s * 0.18, s * 0.5 * halo, 0, Math.PI * 2);
+      c.fill();
+      c.restore();
+      c.fillStyle = '#2ecf7f';
+      c.beginPath();
+      c.arc(0, -s * 0.14, s * 0.26, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = '#d9ffe9';
+      c.beginPath();
+      c.arc(0, -s * 0.14, s * 0.1, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = '#7dffb0';
+      c.beginPath();
+      c.arc(0, -s * 0.14, s * 0.05, 0, Math.PI * 2);
+      c.fill();
+      c.strokeStyle = '#9dffca';
+      c.lineWidth = Math.max(1, s * 0.04);
+      c.beginPath();
+      c.moveTo(-s * 0.1, -s * 0.4);
+      c.lineTo(s * 0.1, -s * 0.4);
+      c.stroke();
+      c.fillStyle = '#a9ffcd';
+      c.beginPath();
+      c.ellipse(-s * 0.16, -s * 0.42, s * 0.13, s * 0.055, -0.5, 0, Math.PI * 2);
+      c.fill();
+    } else if (type === 'twin') {
+      const pulse = 1 + Math.sin(now * 0.005) * 0.05;
+      for (const off of [-s * 0.17, s * 0.17]) {
+        c.save();
+        c.translate(off, -s * 0.18);
+        c.fillStyle = 'rgba(255,215,106,.14)';
+        c.shadowColor = 'rgba(255,215,106,.65)';
+        c.shadowBlur = s * 0.55;
+        c.beginPath();
+        c.arc(0, 0, s * 0.3 * pulse, 0, Math.PI * 2);
+        c.fill();
+        c.restore();
+        const petals = 8;
+        for (let i = 0; i < petals; i++) {
+          const a = i / petals * Math.PI * 2 + Math.sin(now * 0.001) * 0.02;
+          c.save();
+          c.translate(off, -s * 0.18);
+          c.rotate(a);
+          c.fillStyle = i % 2 ? '#ffe39a' : '#ffd15c';
+          c.beginPath();
+          c.ellipse(0, -s * 0.16, s * 0.06, s * 0.11, 0, 0, Math.PI * 2);
+          c.fill();
+          c.restore();
+        }
+        c.fillStyle = '#fff3c9';
+        c.beginPath();
+        c.arc(off, -s * 0.18, s * 0.13, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.strokeStyle = '#1e9c62';
+      c.lineWidth = Math.max(1.2, s * 0.06);
+      c.beginPath();
+      c.moveTo(0, s * 0.3);
+      c.quadraticCurveTo(-s * 0.1, s * 0.02, -s * 0.17, -s * 0.14);
+      c.moveTo(0, s * 0.3);
+      c.quadraticCurveTo(s * 0.1, s * 0.02, s * 0.17, -s * 0.14);
+      c.stroke();
     }
     c.restore();
   }
@@ -2234,6 +2415,70 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
         ctx.arc(0, headY + pr * 1.35 + a * pr * 0.2, pr * 0.3, 0, Math.PI * 2);
         ctx.stroke();
       }
+    } else if (z.type === 'split') {
+      ctx.strokeStyle = '#ffb54f';
+      ctx.lineWidth = Math.max(1.2, s * 0.05);
+      ctx.beginPath();
+      ctx.moveTo(-pr * 0.5, headY - pr * 0.4);
+      ctx.lineTo(0, headY + pr * 0.5);
+      ctx.moveTo(pr * 0.5, headY - pr * 0.4);
+      ctx.lineTo(0, headY + pr * 0.5);
+      ctx.stroke();
+      ctx.fillStyle = '#ffb54f';
+      ctx.beginPath();
+      ctx.arc(0, headY + pr * 0.55, pr * 0.1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,181,79,.5)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(0, headY, pr, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (z.type === 'healer') {
+      ctx.fillStyle = '#1f8f4f';
+      ctx.beginPath();
+      ctx.arc(0, headY + pr * 0.5, pr * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#d9ffe9';
+      ctx.beginPath();
+      ctx.arc(0, headY + pr * 0.5, pr * 0.08, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#d9ffe9';
+      rr(ctx, -pr * 0.06, headY + pr * 0.38, pr * 0.12, pr * 0.24, pr * 0.05);
+      ctx.fill();
+      rr(ctx, -pr * 0.12, headY + pr * 0.44, pr * 0.24, pr * 0.12, pr * 0.05);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(125,255,176,.6)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(0, headY, pr, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (z.type === 'brute') {
+      ctx.fillStyle = '#7a4a3a';
+      ctx.beginPath();
+      ctx.moveTo(-pr * 0.6, headY - pr * 0.3);
+      ctx.lineTo(-pr * 0.9, headY - pr * 1.1);
+      ctx.lineTo(-pr * 0.15, headY - pr * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(pr * 0.6, headY - pr * 0.3);
+      ctx.lineTo(pr * 0.9, headY - pr * 1.1);
+      ctx.lineTo(pr * 0.15, headY - pr * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#8d99a0';
+      ctx.beginPath();
+      ctx.moveTo(-pr * 0.55, headY - pr * 0.45);
+      ctx.lineTo(pr * 0.55, headY - pr * 0.45);
+      ctx.lineTo(pr * 0.4, headY - pr * 0.05);
+      ctx.lineTo(-pr * 0.4, headY - pr * 0.05);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,138,92,.55)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(0, headY, pr, 0, Math.PI * 2);
+      ctx.stroke();
     }
 
     // boss crown + star
